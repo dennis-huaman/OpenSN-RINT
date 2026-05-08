@@ -1,0 +1,54 @@
+#[Network Login SideEffect]
+**/cookies.txt
+
+#[IDE Config]
+**/.idea
+**/.vscode
+
+#[NodeJs Dependencies]
+**/node_modules
+
+#[Runtime Temperary Files]
+**/tmp
+configuration
+
+#[Build Mid-Files]
+**/cmake-build-debug
+**/__pycache__
+*.py[cod]
+
+#[Python Virtual Environments]
+**/.venv/
+**/venv/
+**/env/
+
+#[Python Tool Caches]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+
+#[Binary Files]
+*.mp4
+.DS_Store
+*.zip
+*.tar.gz
+node-daemon/NodeDaemon
+
+#[Build Target]
+daemon/build
+daemon/opensn-daemon
+tools/namespace-generator/generator
+daemon/share/static/
+opensn_build
+
+#[Environment Files]
+.env
+.env.*
+!.env.example
+!.env.sample
+
+#[Local Logs]
+*.log
+*.pid
