@@ -59,6 +59,8 @@ if __name__ == "__main__":
     f_c = 20e9 # Frecuencia portadora Banda Ka
     c = 3e8 # Velocidad de la luz
 
+    # Se debe cambiar el bandwidth para verificar la pérdida de paquetes por Doppler. Para LoRa, típicamente se usan 125 kHz, 250 kHz o 500 kHz. 
+
     lora_channel = LoRaDopplerModel(carrier_frequency=868e6, bandwidth=125e3, sf=12, ldro=True)
 
     # Create Emulator Operator
