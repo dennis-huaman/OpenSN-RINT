@@ -286,57 +286,57 @@ if __name__ == "__main__":
                 delay = int(get_propagation_delay_s(distance)*1000000)
                 link_info.parameter[PARAMETER_KEY_DELAY] = delay
                 link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
-                # link_info.parameter[PARAMETER_KEY_LOSS] = 150 
+                link_info.parameter[PARAMETER_KEY_LOSS] = 150 # Pérdida base (puede ser ajustada según el tipo de enlace o la distancia), el código de  # --- INICIO LÓGICA DOPPLER ---- puede ser descomentado
 
 
-                # --- INICIO LÓGICA DOPPLER ---
-                # 1. Calcular velocidad radial (v_r) en m/s
-                if link_id in previous_distance_map:
-                    # El tiempo simulado transcurrido es step_second * TIME_MULTIPLIER
-                    simulated_elapsed_time = step_second * TIME_MULTIPLIER
-                    v_r = (distance - previous_distance_map[link_id]) / simulated_elapsed_time
-                else:
-                    v_r = 0.0
+                # # --- INICIO LÓGICA DOPPLER ---
+                # # 1. Calcular velocidad radial (v_r) en m/s
+                # if link_id in previous_distance_map:
+                #     # El tiempo simulado transcurrido es step_second * TIME_MULTIPLIER
+                #     simulated_elapsed_time = step_second * TIME_MULTIPLIER
+                #     v_r = (distance - previous_distance_map[link_id]) / simulated_elapsed_time
+                # else:
+                #     v_r = 0.0
                 
-                # Guardamos la distancia actual para el ciclo siguiente
-                previous_distance_map[link_id] = distance
+                # # Guardamos la distancia actual para el ciclo siguiente
+                # previous_distance_map[link_id] = distance
                 
-                # 2. Calcular desvío de frecuencia (f_d) en Hz
-                # Si v_r es positivo, la distancia aumenta (se aleja).
-                f_d = - f_c * (v_r / c)
+                # # 2. Calcular desvío de frecuencia (f_d) en Hz
+                # # Si v_r es positivo, la distancia aumenta (se aleja).
+                # f_d = - f_c * (v_r / c)
                 
-                # 3. Modelo Matemático de Pérdida
-                # Asumimos que el Doppler máximo es 500,000 Hz. 
-                # Mapeamos eso linealmente a un valor de pérdida (ej: max 500).
-                loss_val = int((abs(f_d) / 500000.0) * 500)
+                # # 3. Modelo Matemático de Pérdida
+                # # Asumimos que el Doppler máximo es 500,000 Hz. 
+                # # Mapeamos eso linealmente a un valor de pérdida (ej: max 500).
+                # loss_val = int((abs(f_d) / 500000.0) * 500)
                 
-                # Opcional: Descomenta el print para ver los datos en la terminal
+                # # Opcional: Descomenta el print para ver los datos en la terminal
 
-                iid_A = link_info.end_infos[0].instance_id
-                iid_B = link_info.end_infos[1].instance_id
-                # print(f"Enlace [{nodo_A} <---> {nodo_B}]: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Pérdida = {loss_val}")
-                # print(f"Link {link_id}: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Perdida de Paquetes = {loss_val}")
+                # iid_A = link_info.end_infos[0].instance_id
+                # iid_B = link_info.end_infos[1].instance_id
+                # # print(f"Enlace [{nodo_A} <---> {nodo_B}]: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Pérdida = {loss_val}")
+                # # print(f"Link {link_id}: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Perdida de Paquetes = {loss_val}")
 
-                # Extraer los nombres legibles desde la configuración
-                def get_name(inst_id):
-                    info = all_instance_map.get(inst_id)
-                    if info:
-                        if info.type == "Satellite":
-                            # return info.extra.get("TLE_0", inst_id) # Ej: NODE_0_0
-                            return info.extra.get("TLE_0", inst_id) + " - SAT"
-                        elif info.type == "GroundStation":
-                            return "GS_" + str(info.extra.get("GroundStationIndex", inst_id)) # Ej: GS_0
-                    return inst_id
-                nodo_A = get_name(link_info.end_infos[0].instance_id)
-                nodo_B = get_name(link_info.end_infos[1].instance_id)
+                # # Extraer los nombres legibles desde la configuración
+                # def get_name(inst_id):
+                #     info = all_instance_map.get(inst_id)
+                #     if info:
+                #         if info.type == "Satellite":
+                #             # return info.extra.get("TLE_0", inst_id) # Ej: NODE_0_0
+                #             return info.extra.get("TLE_0", inst_id) + " - SAT"
+                #         elif info.type == "GroundStation":
+                #             return "GS_" + str(info.extra.get("GroundStationIndex", inst_id)) # Ej: GS_0
+                #     return inst_id
+                # nodo_A = get_name(link_info.end_infos[0].instance_id)
+                # nodo_B = get_name(link_info.end_infos[1].instance_id)
                 
-                # Imprimir con los nombres legibles
-                # print(f"Enlace [{nodo_A} ({iid_A}) <---> {nodo_B} ({iid_B})]: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Pérdida = {loss_val}")
+                # # Imprimir con los nombres legibles
+                # # print(f"Enlace [{nodo_A} ({iid_A}) <---> {nodo_B} ({iid_B})]: v_r = {v_r:.2f} m/s | Doppler = {f_d:.2f} Hz | Pérdida = {loss_val}")
 
 
 
-                link_info.parameter[PARAMETER_KEY_LOSS] = loss_val
-                # --- FIN LÓGICA DOPPLER ---
+                # link_info.parameter[PARAMETER_KEY_LOSS] = loss_val
+                # # --- FIN LÓGICA DOPPLER ---
 
 
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
