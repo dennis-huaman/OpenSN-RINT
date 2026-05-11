@@ -5,8 +5,9 @@ from opensn.const.dict_fields import PARAMETER_KEY_CONNECT,PARAMETER_KEY_DELAY,P
 from opensn.model.link import LinkBase
 from opensn.utils.tools import dec2ra
 from config import ADDR,PORT
-from datetime import datetime
-from trajectory import calculate_postion,distance_meter,select_closest_satellite,get_propagation_delay_s, select_satellite_with_Emin
+from datetime import datetime, timedelta
+from opensn.model.doppler_channel import LoRaDopplerModel
+from trajectory import calculate_postion,distance_meter,select_closest_satellite,get_propagation_delay_s, select_satellite_with_Emin, evaluate_link_geometry
 from instance_types import TYPE_GROUND_STATION, TYPE_SATELLITE, EX_ORBIT_INDEX,EX_ALTITUDE_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY, EX_AREA_KEY, EX_TLE0_KEY, EX_TLE1_KEY, EX_TLE2_KEY
 from address_type import LINK_V4_ADDR_KEY
 from time import sleep
@@ -57,6 +58,8 @@ if __name__ == "__main__":
     previous_distance_map = {}
     f_c = 20e9 # Frecuencia portadora Banda Ka
     c = 3e8 # Velocidad de la luz
+
+    lora_channel = LoRaDopplerModel(carrier_frequency=868e6, bandwidth=125e3, sf=12, ldro=True)
 
     # Create Emulator Operator
     while True:
@@ -286,9 +289,11 @@ if __name__ == "__main__":
                 delay = int(get_propagation_delay_s(distance)*1000000)
                 link_info.parameter[PARAMETER_KEY_DELAY] = delay
                 link_info.parameter[PARAMETER_KEY_BANDWIDTH] = 1000000
-                link_info.parameter[PARAMETER_KEY_LOSS] = 150 # Pérdida base (puede ser ajustada según el tipo de enlace o la distancia), el código de  # --- INICIO LÓGICA DOPPLER ---- puede ser descomentado
+                # link_info.parameter[PARAMETER_KEY_LOSS] = 150 # Pérdida base (puede ser ajustada según el tipo de enlace o la distancia), el código de  # --- INICIO LÓGICA DOPPLER ---- puede ser descomentado
 
 
+
+                ##### INICIO LOGICA 1 PARA EL PARAMETER_KEY_LOSS
                 # # --- INICIO LÓGICA DOPPLER ---
                 # # 1. Calcular velocidad radial (v_r) en m/s
                 # if link_id in previous_distance_map:
@@ -337,6 +342,59 @@ if __name__ == "__main__":
 
                 # link_info.parameter[PARAMETER_KEY_LOSS] = loss_val
                 # # --- FIN LÓGICA DOPPLER ---
+
+                ##### FIN LOGICA 1 PARA EL PARAMETER_KEY_LOSS
+
+
+
+
+                ##### INICIO LOGICA 2 PARA EL PARAMETER_KEY_LOSS EN LORA
+                
+                # --- LÓGICA DOPPLER (APARTADO B: SHIFT & RATE) ---
+                # import datetime
+
+                inst_A = all_instance_map[link_info.end_infos[0].instance_id]
+                inst_B = all_instance_map[link_info.end_infos[1].instance_id]
+                
+                if inst_A.type != inst_B.type:
+                    sat_inst = inst_A if inst_A.type == TYPE_SATELLITE else inst_B
+                    gs_inst = inst_B if inst_B.type == TYPE_GROUND_STATION else inst_A
+                    
+                    # 1. Definir los tiempos para el cálculo del Doppler Rate (Derivada)
+                    delta_t = 1.0 # 1 segundo de diferencia para calcular la tasa de cambio
+                    time_t1 = time_now
+                    time_t2 = time_now + timedelta(seconds=delta_t)
+                    
+                    # 2. Obtener velocidades relativas en ambos instantes
+                    _, _, v_r_t1 = evaluate_link_geometry(sat_inst, gs_inst, time_t1)
+                    _, _, v_r_t2 = evaluate_link_geometry(sat_inst, gs_inst, time_t2)
+
+                    # 3. Calcular DOPPLER SHIFT (F_D)
+                    doppler_shift_t1 = lora_channel.calculate_doppler_shift(v_r_t1)
+                    doppler_shift_t2 = lora_channel.calculate_doppler_shift(v_r_t2)
+
+                    # 4. Calcular DOPPLER RATE (R_D) en Hz/s
+                    doppler_rate = lora_channel.calculate_doppler_rate(doppler_shift_t1, doppler_shift_t2, delta_t)
+
+                    # 5. Evaluar los límites de LoRa
+                    time_on_air = lora_channel.get_time_on_air(payload_bytes=15)
+                    packet_loss = lora_channel.evaluate_lora_limits(doppler_shift_t1, doppler_rate, time_on_air)
+                    
+                    loss_val = 10000 if packet_loss == 100.0 else 0 
+
+                    print(f"[{sat_inst.instance_id}]: F_D = {doppler_shift_t1:.2f} Hz | R_D = {doppler_rate:.2f} Hz/s | ToA = {time_on_air}s | Perdida: {packet_loss}%")
+                else:
+                    loss_val = 0 
+
+                link_info.parameter[PARAMETER_KEY_LOSS] = loss_val
+                # --- FIN LÓGICA DOPPLER ---
+
+                ##### FIN LOGICA 2 PARA EL PARAMETER_KEY_LOSS EN LORA
+
+
+
+
+
 
 
                 cli.put_link_parameter(link_info.node_index,link_info.link_id,link_info.parameter)
