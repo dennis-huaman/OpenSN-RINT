@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # Se debe cambiar el bandwidth para verificar la pérdida de paquetes por Doppler. Para LoRa, típicamente se usan 125 kHz, 250 kHz o 500 kHz. 
 
-    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=30e3, gnss_error_margin=0.05)
+    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=10e3, gnss_error_margin=0.05)
     # ora_channel = LoRaDopplerModel(carrier_frequency=868e6, bandwidth=125e3, sf=12, ldro=True)
 
     # Create Emulator Operator
@@ -361,7 +361,7 @@ if __name__ == "__main__":
                     gs_inst = inst_B if inst_B.type == TYPE_GROUND_STATION else inst_A
                     
                     # 1. Obtener la velocidad relativa (solo necesitamos 1 instante)
-                    _, _, v_r = trajectory.evaluate_link_geometry(sat_inst, gs_inst, time_now)
+                    elevacion, distancia, v_r = trajectory.evaluate_link_geometry(sat_inst, gs_inst, time_now)
 
                     # 2. Calcular Doppler Bruto
                     raw_doppler = ntn_channel.calculate_raw_doppler(v_r)
