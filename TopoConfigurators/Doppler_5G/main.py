@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # Se debe cambiar el bandwidth para verificar la pérdida de paquetes por Doppler. Para LoRa, típicamente se usan 125 kHz, 250 kHz o 500 kHz. 
 
-    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=10e3, gnss_error_margin=0.05)
+    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=30e3, gnss_error_margin=0.05)
     # ora_channel = LoRaDopplerModel(carrier_frequency=868e6, bandwidth=125e3, sf=12, ldro=True)
 
     # Create Emulator Operator
