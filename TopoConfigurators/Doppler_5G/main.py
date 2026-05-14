@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # Se debe cambiar el bandwidth para verificar la pérdida de paquetes por Doppler. Para LoRa, típicamente se usan 125 kHz, 250 kHz o 500 kHz. 
 
-    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=30e3, gnss_error_margin=0.03)
+    ntn_channel = NR5GDopplerModel(carrier_frequency=2e9, scs=30e3, gnss_error_margin=0.05)
     # ora_channel = LoRaDopplerModel(carrier_frequency=868e6, bandwidth=125e3, sf=12, ldro=True)
 
     # Create Emulator Operator
@@ -366,12 +366,18 @@ if __name__ == "__main__":
                     # 2. Calcular Doppler Bruto
                     raw_doppler = ntn_channel.calculate_raw_doppler(v_r)
 
+                    packet_loss_percentage = ntn_channel.evaluate_5g_loss_gradual(raw_doppler, steepness=0.08)
+
+                    # Convertir el porcentaje (ej. 25.4%) al formato de ETCD de OpenSN (ej. 2540)
+                    loss_val = int(packet_loss_percentage * 100)
+
                     # 3. Evaluar los límites de la forma de onda OFDM 5G
                     packet_loss = ntn_channel.evaluate_5g_limits(raw_doppler)
                     
-                    loss_val = 10000 if packet_loss == 100.0 else 0 
+                    #loss_val = 10000 if packet_loss == 100.0 else 0 
 
-                    print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Bruto = {raw_doppler/1000:.2f} kHz | Pérdida: {packet_loss}%")
+                    # print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Bruto = {raw_doppler/1000:.2f} kHz | Pérdida: {packet_loss}%")
+                    print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Res. = {(raw_doppler * ntn_channel.gnss_error):.0f} Hz | Límite = {ntn_channel.scs*0.10} Hz | Pérdida Gradual: {packet_loss_percentage:.2f}%")
                 else:
                     loss_val = 0 
 

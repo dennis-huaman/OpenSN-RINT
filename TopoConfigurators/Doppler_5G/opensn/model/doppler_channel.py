@@ -36,3 +36,28 @@ class NR5GDopplerModel:
             return 100.0 # Pierde sincronización OFDM (Fallo total de enlace)
         
         return 0.0 # El módem 5G NTN compensó exitosamente el Doppler
+    
+    def evaluate_5g_loss_gradual(self, raw_doppler, steepness=0.1):
+        """
+        Calcula la pérdida de paquetes gradual simulando la curva BLER (Waterfall).
+        steepness (k): Controla qué tan abrupta es la caída. 
+                       Valores altos (ej. 0.5) lo hacen casi binario.
+                       Valores bajos (ej. 0.05) hacen una transición más suave.
+        """
+        residual_doppler = raw_doppler * self.gnss_error
+        
+        # El centro de nuestra "cascada" será el límite teórico del 10% del SCS
+        ici_limit = 0.10 * self.scs 
+        
+        # Función Sigmoide: P = 1 / (1 + e^(-k * (x - limite)))
+        # Si residual_doppler == ici_limit, la probabilidad de pérdida es exactamente 0.5 (50%)
+        prob_falla = 1.0 / (1.0 + math.exp(-steepness * (residual_doppler - ici_limit)))
+        
+        # Recortar colas para simular la perfección del FEC en zonas estables
+        if prob_falla < 0.01:
+            return 0.0   # 0% de pérdida
+        elif prob_falla > 0.99:
+            return 100.0 # 100% de pérdida
+            
+        # Retorna el porcentaje exacto de pérdida (ej. 23.4%)
+        return prob_falla * 100.0
