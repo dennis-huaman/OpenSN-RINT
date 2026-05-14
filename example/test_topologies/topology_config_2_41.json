@@ -110,11 +110,14 @@
             "type": "GroundStation",
             "extra": {
                 "GroundStationIndex": "1",
-                "latitude": "74.48862667637806",
-                "longitude": "-85.03851909461795",
-                "altitude": "1.2647200639346667"
-            },
-            "device_info": {}
+                "latitude": "-30.00",
+                "longitude": "60.00",
+                "altitude": "0",
+                "IsMobile": "true",
+                "Lat_End": "-30.00",
+                "Lon_End": "-60.00",
+                "TravelTimeSeconds": "180"
+            }
         }
     ],
     "links": [

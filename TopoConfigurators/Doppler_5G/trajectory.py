@@ -8,6 +8,8 @@ from instance_types import TYPE_SATELLITE,TYPE_GROUND_STATION
 from instance_types import EX_TLE0_KEY,EX_TLE1_KEY,EX_TLE2_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY,EX_ALTITUDE_KEY
 from opensn.model.instance import Instance
 
+sim_base_time = None
+
 def deg2rad(deg: float) -> float:
     return deg / 180 * math.pi
         
@@ -145,3 +147,63 @@ def select_satellite_with_Emin(ground_station, instance_map, current_time: datet
         print(f">>> Handover decidido hacia: {select_satellite_id} (Elevación superior a {e_min_deg}°) <<<")
         
     return select_satellite_id, change
+
+def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Position:
+    global sim_base_time
+    
+    # Si es la primera vez que el simulador llama a esta función, 
+    # guardamos este tiempo exacto como el inicio (t=0) para el avión
+    if sim_base_time is None:
+        sim_base_time = current_time
+
+    ret = Position()
+    
+    # --- 1. LÓGICA DE SATELLITES (Se mantiene la original) ---
+    if instance.type == TYPE_SATELLITE and instance.start:
+        ephem_time = ephem.Date(current_time)
+        ephem_obj = ephem.readtle(
+            instance.extra[EX_TLE0_KEY],
+            instance.extra[EX_TLE1_KEY],
+            instance.extra[EX_TLE2_KEY],
+        )
+        ephem_obj.compute(ephem_time)
+        ret.latitude = ephem_obj.sublat
+        ret.longitude = ephem_obj.sublong
+        ret.altitude = ephem_obj.elevation
+        
+    # --- 2. LÓGICA DE GROUND STATIONS Y AVIONES ---
+    elif instance.type == TYPE_GROUND_STATION:
+        if instance.extra.get("IsMobile") == "true":
+            # Extraer parámetros de vuelo
+            lat_a = float(instance.extra[EX_LATITUDE_KEY])
+            lon_a = float(instance.extra[EX_LONGITUDE_KEY])
+            lat_b = float(instance.extra["Lat_End"])
+            lon_b = float(instance.extra["Lon_End"])
+            t_viaje = float(instance.extra["TravelTimeSeconds"])
+            
+            # Calcular tiempo transcurrido en segundos desde el inicio (t=0)
+            delta_t = (current_time - sim_base_time).total_seconds()
+            
+            # Lógica de Ida y Vuelta
+            ciclo = delta_t % (2 * t_viaje)
+            if ciclo <= t_viaje:
+                # FASE IDA
+                progreso = ciclo / t_viaje
+                lat_actual = lat_a + (lat_b - lat_a) * progreso
+                lon_actual = lon_a + (lon_b - lon_a) * progreso
+            else:
+                # FASE REGRESO
+                progreso = (ciclo - t_viaje) / t_viaje
+                lat_actual = lat_b + (lat_a - lat_b) * progreso
+                lon_actual = lon_b + (lon_a - lon_b) * progreso
+            
+            ret.latitude = deg2rad(lat_actual)
+            ret.longitude = deg2rad(lon_actual)
+        else:
+            # Comportamiento estático original para antenas fijas
+            ret.latitude = deg2rad(float(instance.extra[EX_LATITUDE_KEY]))
+            ret.longitude = deg2rad(float(instance.extra[EX_LONGITUDE_KEY]))
+        
+        ret.altitude = float(instance.extra[EX_ALTITUDE_KEY])
+        
+    return ret
