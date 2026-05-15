@@ -2,6 +2,7 @@
 import math
 import ephem
 import datetime
+import json
 from opensn.const.const_var import R_EARTH,LIGHT_SPEED_M_S
 from opensn.model.position import Position
 from instance_types import TYPE_SATELLITE,TYPE_GROUND_STATION
@@ -9,6 +10,17 @@ from instance_types import EX_TLE0_KEY,EX_TLE1_KEY,EX_TLE2_KEY,EX_LATITUDE_KEY,E
 from opensn.model.instance import Instance
 
 sim_base_time = None
+
+# --- NUEVA FUNCIÓN DE TELEMETRÍA ---
+def save_telemetry_to_json(data_dict):
+    """
+    Guarda los diccionarios en un archivo JSONL (JSON Lines).
+    Modo 'a' (append) añade la línea al final sin borrar lo anterior.
+    """
+    with open("telemetry_log.json", "a", encoding="utf-8") as f:
+        f.write(json.dumps(data_dict) + "\n")
+# -----------------------------------
+
 
 def deg2rad(deg: float) -> float:
     return deg / 180 * math.pi
@@ -127,6 +139,16 @@ def select_satellite_with_Emin(ground_station, instance_map, current_time: datet
         # Imprimir los valores para tu evaluación
         print(f"Satélite: {instance_id} | Elevación: {elevation_deg:.2f}° | Distancia: {slant_range/1000:.2f} km | Vel. Relativa: {rel_vel:.2f} m/s")
 
+        save_telemetry_to_json({
+            "timestamp": str(current_time),
+            "event": "satellite_eval",
+            "gs_id": ground_station.instance_id,
+            "sat_id": instance_id,
+            "elevation_deg": round(elevation_deg, 2),
+            "distance_km": round(slant_range / 1000, 2),
+            "rel_vel_m_s": round(rel_vel, 2)
+        })
+
         # FILTRO DE HANDOVER: Solo consideramos satélites por encima de E_min
         if elevation_deg >= e_min_deg:
             # Entre los satélites visibles, elegimos el que tenga el Slant Range más corto
@@ -145,6 +167,14 @@ def select_satellite_with_Emin(ground_station, instance_map, current_time: datet
             
     if select_satellite_id != "":
         print(f">>> Handover decidido hacia: {select_satellite_id} (Elevación superior a {e_min_deg}°) <<<")
+        save_telemetry_to_json({
+            "timestamp": str(current_time),
+            "event": "handover",
+            "gs_id": ground_station.instance_id,
+            "selected_sat_id": select_satellite_id,
+            "e_min_deg": e_min_deg
+        })
+        # -------------------------------------------
         
     return select_satellite_id, change
 
@@ -258,6 +288,18 @@ def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Po
             # deg2rad asumo que es tu función para convertir a radianes, requerida por el ret.latitude
             ret.latitude = deg2rad(lat_actual)
             ret.longitude = deg2rad(lon_actual)
+            print(f"[VUELO] Tiempo: {delta_t:.1f}s | Progreso: {(progreso*100):.4f}% | Lon Actual: {lon_actual:.6f}° | Lat Actual: {lat_actual:.6f}°")
+            # --- NUEVO: Guardar ruta de vuelo ---
+            save_telemetry_to_json({
+                "timestamp": str(current_time),
+                "event": "flight_progress",
+                "gs_id": instance.instance_id,
+                "flight_time_s": round(delta_t, 1),
+                "progress_pct": round(progreso * 100, 4),
+                "lon_deg": round(lon_actual, 6),
+                "lat_deg": round(lat_actual, 6)
+            })
+            # ------------------------------------
         else:
             # Comportamiento estático
             ret.latitude = deg2rad(float(instance.extra[EX_LATITUDE_KEY]))
@@ -266,3 +308,4 @@ def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Po
         ret.altitude = float(instance.extra[EX_ALTITUDE_KEY])
         
     return ret
+
