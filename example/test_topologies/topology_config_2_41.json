@@ -110,11 +110,11 @@
             "type": "GroundStation",
             "extra": {
                 "GroundStationIndex": "1",
-                "latitude": "-80.00",
+                "latitude": "80.00",
                 "longitude": "30.00",
                 "altitude": "0.00",
                 "IsMobile": "true",
-                "Lat_End": "80.00",
+                "Lat_End": "-80.00",
                 "Lon_End": "30.00",
                 "Velocity_m_s": "10000.00"
             }
