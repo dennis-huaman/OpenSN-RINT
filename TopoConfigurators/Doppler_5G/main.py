@@ -10,6 +10,7 @@ from opensn.model.doppler_channel import NR5GDopplerModel
 from trajectory import calculate_postion,distance_meter,select_closest_satellite,get_propagation_delay_s, select_satellite_with_Emin, evaluate_link_geometry
 from instance_types import TYPE_GROUND_STATION, TYPE_SATELLITE, EX_ORBIT_INDEX,EX_ALTITUDE_KEY,EX_LATITUDE_KEY,EX_LONGITUDE_KEY, EX_AREA_KEY, EX_TLE0_KEY, EX_TLE1_KEY, EX_TLE2_KEY
 from address_type import LINK_V4_ADDR_KEY
+from opensn.const.const_var import LIGHT_SPEED_M_S
 from time import sleep
 from address_allocator import alloc_ipv4,format_ipv4
 from loguru import logger
@@ -363,17 +364,46 @@ if __name__ == "__main__":
                     # 1. Obtener la velocidad relativa (solo necesitamos 1 instante)
                     elevacion, distancia, v_r = trajectory.evaluate_link_geometry(sat_inst, gs_inst, time_now)
 
-                    # 2. Calcular Doppler Bruto
-                    raw_doppler = ntn_channel.calculate_raw_doppler(v_r)
+                    ####### modificado
+                    raw_doppler = (abs(v_r) / LIGHT_SPEED_M_S) * ntn_channel.f_c
 
-                    packet_loss_percentage = ntn_channel.evaluate_5g_loss_gradual(raw_doppler, steepness=0.08)
+                    # --- NUEVA LÓGICA: Error GNSS por Elevación ---
+                    error_cenit = 0.01     # 1% de error a 90 grados
+                    error_horizonte = 0.15 # 15% de error a 10 grados (asumiendo tu e_min=10)
 
-                    # Convertir el porcentaje (ej. 25.4%) al formato de ETCD de OpenSN (ej. 2540)
+                    # Fórmula de interpolación lineal inversa:
+                    # (Progreso de 0.0 a 1.0, donde 1.0 es estar en el horizonte a 10°)
+                    if elevacion >= 90.0:
+                        current_gnss_error = error_cenit
+                    elif elevacion <= 10.0:
+                        current_gnss_error = error_horizonte
+                    else:
+                        # Fracción de cuán cerca estamos de los 10 grados
+                        fraccion = (90.0 - elevacion) / 80.0
+                        current_gnss_error = error_cenit + (error_horizonte - error_cenit) * fraccion
+
+                    # Inyectar el error dinámico al canal
+                    ntn_channel.gnss_error = current_gnss_error
+                    # ----------------------------------------------
+
+                    packet_loss_percentage = ntn_channel.evaluate_5g_loss_gradual(raw_doppler, steepness=0.01)
                     loss_val = int(packet_loss_percentage * 100)
+                    ###################
 
-                    # 3. Evaluar los límites de la forma de onda OFDM 5G
-                    packet_loss = ntn_channel.evaluate_5g_limits(raw_doppler)
-                    
+                    #######xd
+                    # # 2. Calcular Doppler Bruto
+                    # raw_doppler = ntn_channel.calculate_raw_doppler(v_r)
+
+                    # packet_loss_percentage = ntn_channel.evaluate_5g_loss_gradual(raw_doppler, steepness=0.08)
+
+                    # # Convertir el porcentaje (ej. 25.4%) al formato de ETCD de OpenSN (ej. 2540)
+                    # loss_val = int(packet_loss_percentage * 100)
+
+                    # # 3. Evaluar los límites de la forma de onda OFDM 5G
+                    # packet_loss = ntn_channel.evaluate_5g_limits(raw_doppler)
+                    #######xd
+
+
                     #loss_val = 10000 if packet_loss == 100.0 else 0 
 
                     # print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Bruto = {raw_doppler/1000:.2f} kHz | Pérdida: {packet_loss}%")
