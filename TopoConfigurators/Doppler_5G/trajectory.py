@@ -86,37 +86,77 @@ def select_closest_satellite(
 
 
 # Funciones implementadas
+# def evaluate_link_geometry(sat_instance, gs_instance, current_time: datetime.datetime):
+#     """
+#     Implementa las ecuaciones geométricas (Apartado A) del paper LoRa.
+#     Calcula la distancia oblicua (Slant Range) y el ángulo de elevación (Elevation).
+#     """
+#     # 1. Configurar la Ground Station como el Observador
+#     gs_observer = ephem.Observer()
+#     # ephem requiere las coordenadas en radianes o formato string ('grados:minutos:segundos')
+#     gs_observer.lat = math.radians(float(gs_instance.extra[EX_LATITUDE_KEY]))
+#     gs_observer.lon = math.radians(float(gs_instance.extra[EX_LONGITUDE_KEY]))
+#     gs_observer.elevation = float(gs_instance.extra[EX_ALTITUDE_KEY])
+#     gs_observer.date = ephem.Date(current_time)
+
+#     # 2. Configurar el satélite LEO
+#     sat_ephem = ephem.readtle(
+#         sat_instance.extra[EX_TLE0_KEY],
+#         sat_instance.extra[EX_TLE1_KEY],
+#         sat_instance.extra[EX_TLE2_KEY],
+#     )
+    
+#     # 3. Calcular la geometría relativa
+#     sat_ephem.compute(gs_observer)
+
+#     # 4. Extraer los valores requeridos por las ecuaciones
+#     elevation_angle_rad = sat_ephem.alt
+#     elevation_angle_deg = math.degrees(elevation_angle_rad)
+    
+#     slant_range_meters = sat_ephem.range # Distancia d(t)
+#     range_velocity_ms = sat_ephem.range_velocity # Velocidad de acercamiento (Para Doppler)
+
+#     return elevation_angle_deg, slant_range_meters, range_velocity_ms
 def evaluate_link_geometry(sat_instance, gs_instance, current_time: datetime.datetime):
     """
-    Implementa las ecuaciones geométricas (Apartado A) del paper LoRa.
-    Calcula la distancia oblicua (Slant Range) y el ángulo de elevación (Elevation).
+    Calcula la distancia oblicua y elevación.
+    Soporta Nodos Móviles consultando 'calculate_postion' en tiempo real.
     """
-    # 1. Configurar la Ground Station como el Observador
     gs_observer = ephem.Observer()
-    # ephem requiere las coordenadas en radianes o formato string ('grados:minutos:segundos')
-    gs_observer.lat = math.radians(float(gs_instance.extra[EX_LATITUDE_KEY]))
-    gs_observer.lon = math.radians(float(gs_instance.extra[EX_LONGITUDE_KEY]))
+    
+    # --- LA CORRECCIÓN CLAVE ---
+    # 1. Le pedimos a tu algoritmo de vuelo dónde está el avión EXACTAMENTE en este milisegundo
+    current_gs_pos = calculate_postion(gs_instance, current_time)
+    
+    # 2. Le pasamos estas coordenadas dinámicas a la librería ephem.
+    # (Nota de seguridad: ephem es muy exigente. Transformarlo a string en grados 
+    # asegura que jamás confunda radianes con grados flotantes)
+    gs_observer.lat = str(math.degrees(current_gs_pos.latitude))
+    gs_observer.lon = str(math.degrees(current_gs_pos.longitude))
+    # ---------------------------
+
     gs_observer.elevation = float(gs_instance.extra[EX_ALTITUDE_KEY])
     gs_observer.date = ephem.Date(current_time)
 
-    # 2. Configurar el satélite LEO
+    # Configurar el satélite LEO
     sat_ephem = ephem.readtle(
         sat_instance.extra[EX_TLE0_KEY],
         sat_instance.extra[EX_TLE1_KEY],
         sat_instance.extra[EX_TLE2_KEY],
     )
     
-    # 3. Calcular la geometría relativa
+    # Calcular la geometría relativa
     sat_ephem.compute(gs_observer)
 
-    # 4. Extraer los valores requeridos por las ecuaciones
+    # Extraer los valores requeridos
     elevation_angle_rad = sat_ephem.alt
     elevation_angle_deg = math.degrees(elevation_angle_rad)
     
-    slant_range_meters = sat_ephem.range # Distancia d(t)
-    range_velocity_ms = sat_ephem.range_velocity # Velocidad de acercamiento (Para Doppler)
+    slant_range_meters = sat_ephem.range 
+    range_velocity_ms = sat_ephem.range_velocity 
 
     return elevation_angle_deg, slant_range_meters, range_velocity_ms
+
 
 def select_satellite_with_Emin(ground_station, instance_map, current_time: datetime.datetime, e_min_deg=15.0):
     """

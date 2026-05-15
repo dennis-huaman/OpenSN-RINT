@@ -1,0 +1,281 @@
+{
+    "instances": [
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_0_0",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 000.0000 0000011   0.0000   0.0000 13.15070000000000",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "0",
+                "SatelliteIndex": "0"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_0_1",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 000.0000 0000011   0.0000  90.0000 13.15070000000009",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "0",
+                "SatelliteIndex": "1"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_0_2",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 000.0000 0000011   0.0000 180.0000 13.15070000000009",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "0",
+                "SatelliteIndex": "2"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_0_3",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 000.0000 0000011   0.0000 270.0000 13.15070000000009",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "0",
+                "SatelliteIndex": "3"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_1_0",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 090.0000 0000011   0.0000  45.0000 13.15070000000008",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "1",
+                "SatelliteIndex": "0"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_1_1",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 090.0000 0000011   0.0000 135.0000 13.15070000000008",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "1",
+                "SatelliteIndex": "1"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_1_2",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 090.0000 0000011   0.0000 225.0000 13.15070000000008",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "1",
+                "SatelliteIndex": "2"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "Satellite",
+            "extra": {
+                "TLE_0": "NODE_1_3",
+                "TLE_1": "1 00000U 23666A   26134.03407267  .00000000  00000-0 00000000 0 00000",
+                "TLE_2": "2 00000  90.0000 090.0000 0000011   0.0000 315.0000 13.15070000000008",
+                "Area": "0.0.0.0",
+                "OrbitIndex": "1",
+                "SatelliteIndex": "3"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "GroundStation",
+            "extra": {
+                "GroundStationIndex": "0",
+                "latitude": "-58.87059207496236",
+                "longitude": "-113.59441267601525",
+                "altitude": "6.672854365022128"
+            },
+            "device_info": {}
+        },
+        {
+            "type": "GroundStation",
+            "extra": {
+                "GroundStationIndex": "1",
+                "latitude": "-30.00",
+                "longitude": "60.00",
+                "altitude": "0.00",
+                "IsMobile": "true",
+                "Lat_End": "-30.00",
+                "Lon_End": "-60.00",
+                "Velocity_m_s": "1000.00"
+            }
+        }
+    ],
+    "links": [
+        {
+            "end_indexes": [
+                0,
+                1
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                0,
+                4
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                1,
+                2
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                1,
+                5
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                2,
+                3
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                2,
+                6
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                3,
+                0
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                3,
+                7
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                4,
+                5
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                5,
+                6
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                6,
+                7
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        },
+        {
+            "end_indexes": [
+                7,
+                4
+            ],
+            "type": "vlink",
+            "init_parameter": {},
+            "address_infos": [
+                {},
+                {}
+            ],
+            "extra": {}
+        }
+    ]
+}

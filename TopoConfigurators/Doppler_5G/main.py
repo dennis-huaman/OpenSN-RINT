@@ -146,7 +146,7 @@ if __name__ == "__main__":
             #     position_map,
             #     all_instance_map
             # )
-            e_min_threshold = 1.0 # Umbral de elevación en grados
+            e_min_threshold = 10.0 # Umbral de elevación en grados
             satellite_id,change = select_satellite_with_Emin(
                 ground_station, 
                 instance_map, 
@@ -378,6 +378,23 @@ if __name__ == "__main__":
 
                     # print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Bruto = {raw_doppler/1000:.2f} kHz | Pérdida: {packet_loss}%")
                     print(f"[{sat_inst.instance_id} 5G-NTN]: Doppler Res. = {(raw_doppler * ntn_channel.gnss_error):.0f} Hz | Límite = {ntn_channel.scs*0.10} Hz | Pérdida Gradual: {packet_loss_percentage:.2f}%")
+                    # --- NUEVO: Guardar telemetría de red 5G NTN ---
+                    try:
+                        with open("telemetry_log.json", "a", encoding="utf-8") as f:
+                            log_data = {
+                                "timestamp": str(time_now),
+                                "event": "5g_doppler_loss",
+                                "gs_id": gs_inst.instance_id,
+                                "sat_id": sat_inst.instance_id,
+                                "raw_doppler_hz": round(raw_doppler, 2),
+                                "residual_doppler_hz": round(raw_doppler * ntn_channel.gnss_error, 2),
+                                "ici_limit_hz": round(ntn_channel.scs * 0.10, 2),
+                                "loss_pct": round(packet_loss_percentage, 2)
+                            }
+                            f.write(json.dumps(log_data) + "\n")
+                    except Exception as e:
+                        pass # Evitar que un error de escritura detenga la emulación de red
+                    # -----------------------------------------------
                 else:
                     loss_val = 0 
 

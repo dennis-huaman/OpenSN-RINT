@@ -100,8 +100,8 @@
             "type": "GroundStation",
             "extra": {
                 "GroundStationIndex": "0",
-                "latitude": "-58.87059207496236",
-                "longitude": "-113.59441267601525",
+                "latitude": "0.00",
+                "longitude": "90.00",
                 "altitude": "6.672854365022128"
             },
             "device_info": {}
@@ -110,13 +110,13 @@
             "type": "GroundStation",
             "extra": {
                 "GroundStationIndex": "1",
-                "latitude": "-30.00",
-                "longitude": "60.00",
+                "latitude": "-80.00",
+                "longitude": "30.00",
                 "altitude": "0.00",
                 "IsMobile": "true",
-                "Lat_End": "-30.00",
-                "Lon_End": "-60.00",
-                "Velocity_m_s": "1000.00"
+                "Lat_End": "80.00",
+                "Lon_End": "30.00",
+                "Velocity_m_s": "10000.00"
             }
         }
     ],
