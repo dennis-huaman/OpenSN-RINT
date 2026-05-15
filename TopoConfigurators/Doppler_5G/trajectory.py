@@ -328,7 +328,7 @@ def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Po
             # deg2rad asumo que es tu función para convertir a radianes, requerida por el ret.latitude
             ret.latitude = deg2rad(lat_actual)
             ret.longitude = deg2rad(lon_actual)
-            print(f"[VUELO] Tiempo: {delta_t:.1f}s | Progreso: {(progreso*100):.4f}% | Lon Actual: {lon_actual:.6f}° | Lat Actual: {lat_actual:.6f}°")
+            # print(f"[VUELO] Tiempo: {delta_t:.1f}s | Progreso: {(progreso*100):.4f}% | Lon Actual: {lon_actual:.6f}° | Lat Actual: {lat_actual:.6f}°")
             # --- NUEVO: Guardar ruta de vuelo ---
             save_telemetry_to_json({
                 "timestamp": str(current_time),
