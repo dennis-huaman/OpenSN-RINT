@@ -2,7 +2,18 @@ import math
 from opensn.const.const_var import LIGHT_SPEED_M_S
 
 class NR5GDopplerModel:
-    def __init__(self, carrier_frequency=2e9, scs=15e3, gnss_error_margin=0.05):
+    # def __init__(self, carrier_frequency=2e9, scs=15e3, gnss_error_margin=0.05):
+    #     """
+    #     Modelo 5G NTN basado en CP-OFDM.
+    #     carrier_frequency: Banda S (~2 GHz) o Banda Ku (~12 GHz)
+    #     scs: Subcarrier Spacing (ej. 15kHz, 30kHz, 60kHz)
+    #     gnss_error_margin: % de error en la pre-compensación del equipo (ej. 5% = 0.05)
+    #     """
+    #     self.c = LIGHT_SPEED_M_S
+    #     self.f_c = carrier_frequency
+    #     self.scs = scs
+    #     self.gnss_error = gnss_error_margin
+    def __init__(self, carrier_frequency=2e9, numerology_mu=1, gnss_error_margin=0.05):
         """
         Modelo 5G NTN basado en CP-OFDM.
         carrier_frequency: Banda S (~2 GHz) o Banda Ku (~12 GHz)
@@ -11,8 +22,12 @@ class NR5GDopplerModel:
         """
         self.c = LIGHT_SPEED_M_S
         self.f_c = carrier_frequency
-        self.scs = scs
+        # self.scs = scs
+        self.mu = numerology_mu
         self.gnss_error = gnss_error_margin
+        self.scs = 15e3 * (2 ** self.mu)
+        self.slot_duration_ms = 1.0 / (2 ** self.mu)
+        
 
     def calculate_raw_doppler(self, range_velocity):
         # Doppler bruto generado por el movimiento del satélite
