@@ -148,17 +148,52 @@ def select_satellite_with_Emin(ground_station, instance_map, current_time: datet
         
     return select_satellite_id, change
 
+
+def great_circle_interpolate(lat1_deg, lon1_deg, lat2_deg, lon2_deg, fraction):
+    """
+    Calcula la posición exacta en la superficie terrestre (Círculo Máximo) 
+    dado un porcentaje de progreso (fraction) entre dos puntos.
+    """
+    if fraction <= 0.0: return lat1_deg, lon1_deg
+    if fraction >= 1.0: return lat2_deg, lon2_deg
+
+    # Convertir a radianes
+    lat1, lon1 = math.radians(lat1_deg), math.radians(lon1_deg)
+    lat2, lon2 = math.radians(lat2_deg), math.radians(lon2_deg)
+
+    # Distancia angular entre los dos puntos
+    cos_d = math.sin(lat1)*math.sin(lat2) + math.cos(lat1)*math.cos(lat2)*math.cos(lon2 - lon1)
+    # Evitar errores de dominio por precisión de punto flotante (ej. 1.0000000002)
+    cos_d = max(-1.0, min(1.0, cos_d)) 
+    d = math.acos(cos_d)
+
+    if d == 0:
+        return lat1_deg, lon1_deg
+
+    # Interpolar en la esfera
+    a = math.sin((1.0 - fraction) * d) / math.sin(d)
+    b = math.sin(fraction * d) / math.sin(d)
+
+    x = a * math.cos(lat1) * math.cos(lon1) + b * math.cos(lat2) * math.cos(lon2)
+    y = a * math.cos(lat1) * math.sin(lon1) + b * math.cos(lat2) * math.sin(lon2)
+    z = a * math.sin(lat1) + b * math.sin(lat2)
+
+    lat_i = math.atan2(z, math.sqrt(x**2 + y**2))
+    lon_i = math.atan2(y, x)
+
+    return math.degrees(lat_i), math.degrees(lon_i)
+
+
+
 def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Position:
     global sim_base_time
     
-    # Si es la primera vez que el simulador llama a esta función, 
-    # guardamos este tiempo exacto como el inicio (t=0) para el avión
     if sim_base_time is None:
         sim_base_time = current_time
 
     ret = Position()
     
-    # --- 1. LÓGICA DE SATELLITES (Se mantiene la original) ---
+    # --- 1. LÓGICA DE SATELLITES ---
     if instance.type == TYPE_SATELLITE and instance.start:
         ephem_time = ephem.Date(current_time)
         ephem_obj = ephem.readtle(
@@ -174,33 +209,57 @@ def calculate_postion(instance: Instance, current_time: datetime.datetime) -> Po
     # --- 2. LÓGICA DE GROUND STATIONS Y AVIONES ---
     elif instance.type == TYPE_GROUND_STATION:
         if instance.extra.get("IsMobile") == "true":
-            # Extraer parámetros de vuelo
+            # Extraer parámetros de vuelo en grados
             lat_a = float(instance.extra[EX_LATITUDE_KEY])
             lon_a = float(instance.extra[EX_LONGITUDE_KEY])
             lat_b = float(instance.extra["Lat_End"])
             lon_b = float(instance.extra["Lon_End"])
-            t_viaje = float(instance.extra["TravelTimeSeconds"])
             
-            # Calcular tiempo transcurrido en segundos desde el inicio (t=0)
+            # --- NUEVO: Calcular Distancia y Tiempo basado en Velocidad ---
+            # 1. Calculamos la distancia angular entre A y B
+            lat1_rad, lon1_rad = math.radians(lat_a), math.radians(lon_a)
+            lat2_rad, lon2_rad = math.radians(lat_b), math.radians(lon_b)
+            cos_d = math.sin(lat1_rad)*math.sin(lat2_rad) + math.cos(lat1_rad)*math.cos(lat2_rad)*math.cos(lon2_rad - lon1_rad)
+            cos_d = max(-1.0, min(1.0, cos_d))
+            d_rad = math.acos(cos_d)
+            
+            # 2. Multiplicamos por el radio de la Tierra para obtener metros (Arco de circunferencia)
+            distancia_total_m = d_rad * R_EARTH
+            
+            # 3. Leer velocidad y deducir el tiempo de viaje (t = d / v)
+            velocidad_m_s = float(instance.extra.get("Velocity_m_s", 250.0))
+            
+            if velocidad_m_s > 0 and distancia_total_m > 0:
+                t_viaje = distancia_total_m / velocidad_m_s
+            else:
+                t_viaje = 1.0 # Evitar división por cero si la distancia o velocidad es 0
+
+            # --- FIN DEL NUEVO CÁLCULO ---
+
             delta_t = (current_time - sim_base_time).total_seconds()
             
-            # Lógica de Ida y Vuelta
-            ciclo = delta_t % (2 * t_viaje)
-            if ciclo <= t_viaje:
-                # FASE IDA
-                progreso = ciclo / t_viaje
-                lat_actual = lat_a + (lat_b - lat_a) * progreso
-                lon_actual = lon_a + (lon_b - lon_a) * progreso
+            # Continuamos con la lógica de ciclo usando el tiempo calculado
+            if distancia_total_m > 0:
+                ciclo = delta_t % (2 * t_viaje)
+                
+                # Reemplazamos la interpolación lineal 2D por la esférica 3D
+                if ciclo <= t_viaje:
+                    # FASE IDA
+                    progreso = ciclo / t_viaje
+                    lat_actual, lon_actual = great_circle_interpolate(lat_a, lon_a, lat_b, lon_b, progreso)
+                else:
+                    # FASE REGRESO
+                    progreso = (ciclo - t_viaje) / t_viaje
+                    lat_actual, lon_actual = great_circle_interpolate(lat_b, lon_b, lat_a, lon_a, progreso)
             else:
-                # FASE REGRESO
-                progreso = (ciclo - t_viaje) / t_viaje
-                lat_actual = lat_b + (lat_a - lat_b) * progreso
-                lon_actual = lon_b + (lon_a - lon_b) * progreso
+                # Si A y B son las mismas coordenadas
+                lat_actual, lon_actual = lat_a, lon_a
             
+            # deg2rad asumo que es tu función para convertir a radianes, requerida por el ret.latitude
             ret.latitude = deg2rad(lat_actual)
             ret.longitude = deg2rad(lon_actual)
         else:
-            # Comportamiento estático original para antenas fijas
+            # Comportamiento estático
             ret.latitude = deg2rad(float(instance.extra[EX_LATITUDE_KEY]))
             ret.longitude = deg2rad(float(instance.extra[EX_LONGITUDE_KEY]))
         

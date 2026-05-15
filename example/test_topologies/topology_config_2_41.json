@@ -116,7 +116,7 @@
                 "IsMobile": "true",
                 "Lat_End": "-30.00",
                 "Lon_End": "-60.00",
-                "TravelTimeSeconds": "180"
+                "Velocity_m_s": "1000.00"
             }
         }
     ],
