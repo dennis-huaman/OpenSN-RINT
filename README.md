@@ -7,7 +7,6 @@
 - NodeJS
 ## Despliegue inicial
 git clone https://github.com/OpenSN-Library/OpenSN-Library.git
-# git clone https://github.com/dennis-huaman/OpenSN-RINT.git (mi repo/verificar si funciona igual)
 cd OpenSN-Library/
 make build
 ## Configuración de parámetros del kernel
