@@ -6,19 +6,19 @@
 - Golang
 - NodeJS
 ## Despliegue inicial
-git clone https://github.com/OpenSN-Library/OpenSN-Library.git
-cd OpenSN-Library/
-make build
+git clone https://github.com/OpenSN-Library/OpenSN-Library.git \
+cd OpenSN-Library/ \
+make build \
 ## Configuración de parámetros del kernel
-sudo tee -a /etc/sysctl.conf <<EOF
-fs.inotify.max_user_instances = 4096
-net.ipv4.neigh.default.gc_thresh1 = 8192
-net.ipv4.neigh.default.gc_thresh2 = 16384
-net.ipv4.neigh.default.gc_thresh3 = 32768
-EOF
+sudo tee -a /etc/sysctl.conf <<EOF \
+fs.inotify.max_user_instances = 4096 \
+net.ipv4.neigh.default.gc_thresh1 = 8192 \
+net.ipv4.neigh.default.gc_thresh2 = 16384 \ 
+net.ipv4.neigh.default.gc_thresh3 = 32768 \
+EOF \
 ## Despliegue
-cd ~/Escritorio/OpenSN-Library/daemon
-make dep
-cd ~/Escritorio/OpenSN-Library/opensn_build
-cd opensn-daemon
-sudo ./NodeDaemon
+cd ~/Escritorio/OpenSN-Library/daemon \
+make dep \
+cd ~/Escritorio/OpenSN-Library/opensn_build \
+cd opensn-daemon \
+sudo ./NodeDaemon \
